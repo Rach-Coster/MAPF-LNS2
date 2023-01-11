@@ -45,6 +45,11 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
 }
 
+LNS::LNS(const Instance& instance, TLNS_options tlnsOptions, clock_t tStart):
+    BasicLNS(instance, time_limit, neighbor_size, screen), tlnsOptions(tlnsOptions){
+    
+}
+
 bool LNS::run()
 {
     // only for statistic analysis, and thus is not included in runtime

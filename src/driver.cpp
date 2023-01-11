@@ -4,7 +4,7 @@
 #include "AnytimeBCBS.h"
 #include "AnytimeEECBS.h"
 #include "PIBT/pibt.h"
-
+#include "TimeWrapper.h"    
 
 /* Main function */
 int main(int argc, char** argv)
@@ -53,6 +53,11 @@ int main(int argc, char** argv)
          // params for initLNS
          ("initDestoryStrategy", po::value<string>()->default_value("Adaptive"),
           "Heuristics for finding subgroups (Target, Collision, Random, Adaptive)")
+		
+        // params for TLNS wrapper 
+        ("timePerAction", po::value<double>()->default_value(1), "Number of seconds per t")
+        ("metaHeuristic", po::value<string>()->default_value("OneActionAhead"), "Meta-heuristics to determine the predicition scope (OneActionAhead, AllActions, FixedActionSteps, Dynamic)")
+        ("solutionType", po::value<string>()->default_value("Feasible"), "Result from LNS that is the starting point for the meta heuristic (Feasible, NonFeasible)")
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -126,7 +131,39 @@ int main(int argc, char** argv)
             eecbs.writeResultToFile(vm["output"].as<string>() + ".csv");
         if (vm.count("stats"))
             eecbs.writeIterStatsToFile(vm["stats"].as<string>());
+    }    
+    else if(vm["solver"].as<string>() == "TLNS") //Time wrapper with LNS 
+    {
+        TLNS_options tlnsOptions; 
+        tlnsOptions.time_limit = time_limit; 
+        tlnsOptions.initAlgo = vm["initAlgo"].as<string>();
+        tlnsOptions.replanAlgo = vm["replanAlgo"].as<string>();
+        tlnsOptions.destroyStrategy = vm["destoryStrategy"].as<string>();
+        tlnsOptions.neighbourSize = vm["neighborSize"].as<int>();
+        tlnsOptions.maxIterations = vm["maxIterations"].as<int>();
+        tlnsOptions.initLNS = vm["initLNS"].as<bool>();
+        tlnsOptions.initDestroyStrategy = vm["initDestoryStrategy"].as<string>();
+        tlnsOptions.sipp = vm["sipp"].as<bool>(),
+        tlnsOptions.screen  = screen; 
+        tlnsOptions.pipp_option = pipp_option;
+
+       
+        // //pass instance of struct to timewrapper
+        // //struct is the same as the one in the class re cpp 
+
+        TimeWrapper timeWrapper
+        (
+            instance,
+            vm["timePerAction"].as<double>(),
+            vm["metaHeuristic"].as<string>(),
+            vm["solutionType"].as<string>(),
+            tlnsOptions
+        );  
+
+
+        //timeWrapper.runCommitmentStrategy();
     }
+
 	else
     {
 	    cerr << "Solver " << vm["solver"].as<string>() << " does not exist!" << endl;
