@@ -87,8 +87,16 @@ struct TLNS_options {
     bool initLNS;
     string initDestroyStrategy; 
     bool sipp;
+    bool truncatePaths;
     int screen;
     PIBTPPS_option pipp_option; 
+};
+
+struct Agents {
+    int id;
+    int currentX;
+    int currentY;
+    vector<pair<int, int>> pastPositions; 
 };
 
 template <typename Container> // we can make this generic for any container [1]

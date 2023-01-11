@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 		
         // params for TLNS wrapper 
         ("timePerAction", po::value<double>()->default_value(1), "Number of seconds per t")
+        ("noOfCommittedActions", po::value<int>()->default_value(1), "Number commited actions (t)")
         ("metaHeuristic", po::value<string>()->default_value("OneActionAhead"), "Meta-heuristics to determine the predicition scope (OneActionAhead, AllActions, FixedActionSteps, Dynamic)")
         ("solutionType", po::value<string>()->default_value("Feasible"), "Result from LNS that is the starting point for the meta heuristic (Feasible, NonFeasible)")
 		;
@@ -144,6 +145,7 @@ int main(int argc, char** argv)
         tlnsOptions.initLNS = vm["initLNS"].as<bool>();
         tlnsOptions.initDestroyStrategy = vm["initDestoryStrategy"].as<string>();
         tlnsOptions.sipp = vm["sipp"].as<bool>(),
+        tlnsOptions.truncatePaths = vm["truncatePaths"].as<bool>(),
         tlnsOptions.screen  = screen; 
         tlnsOptions.pipp_option = pipp_option;
 
@@ -155,13 +157,14 @@ int main(int argc, char** argv)
         (
             instance,
             vm["timePerAction"].as<double>(),
+            vm["noOfCommittedActions"].as<int>(),
             vm["metaHeuristic"].as<string>(),
             vm["solutionType"].as<string>(),
             tlnsOptions
         );  
 
 
-        //timeWrapper.runCommitmentStrategy();
+        timeWrapper.runCommitmentStrategy();
     }
 
 	else

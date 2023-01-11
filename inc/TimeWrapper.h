@@ -20,8 +20,8 @@ public:
     double time_per_action = 1;
     double rate_of_improvement = 0; 
 
-    TimeWrapper(const Instance&  instance, const double& timePerAction, const string& metaHeuristic, 
-        const string& solutionType, const TLNS_options& options);
+    TimeWrapper(const Instance&  instance, const double& timePerAction, const int& numberOfCommitedActions,
+        const string& metaHeuristic, const string& solutionType, const TLNS_options& options);
 
 
     void runCommitmentStrategy();
@@ -29,5 +29,7 @@ public:
 private: 
     meta_heuristic m_heuristic = ONEACTIONAHEAD; 
     solution_type s_type = FEASIBLE; 
+
+    //bool atGoals(vector<Agents*> states); 
    
 };
