@@ -33,6 +33,6 @@ private:
     meta_heuristic m_heuristic = ONEACTIONAHEAD; 
     solution_type s_type = FEASIBLE; 
 
-    //bool atGoals(vector<Agents*> states); 
+    bool atGoals(vector<Agents> states); 
    
 };

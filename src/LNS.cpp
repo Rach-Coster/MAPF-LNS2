@@ -4,9 +4,6 @@
 #include<boost/tokenizer.hpp>
 #include <utility>
 
-//temp
-#include <string.h>
-
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
          string init_destory_name, bool use_sipp, bool truncate_initial_paths,

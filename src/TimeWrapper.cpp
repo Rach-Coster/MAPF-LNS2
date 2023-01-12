@@ -2,6 +2,10 @@
 #include <string>
 #include <iostream>
 
+//temp
+#include <string.h>
+using namespace std; 
+
 TimeWrapper::TimeWrapper(const Instance& instance, const double& timePerAction, const int& noOfCommitedActions,
     const string& metaHeuristic, const string& solutionType, const TLNS_options& options): 
     instance(instance), tlnsOptions(options){
@@ -45,16 +49,12 @@ void TimeWrapper::runCommitmentStrategy(){
     // so that is it easier to retrieve and alter values
 
     clock_t t_start = clock(); 
-
-
     //make an LNS constructor that contains the strut and the time 
     //initLNS does not always provide a feasible solution
 
-    LNS lns(instance, tlnsOptions, t_start); 
-    
+    LNS lns(instance, tlnsOptions, t_start);     
     lns.run();  
-
-    PathTable pathTable = lns.getPathTable();
+ 
     clock_t wallClockTime = clock() - t_start; 
 
     vector<Agents> states; 
@@ -69,14 +69,9 @@ void TimeWrapper::runCommitmentStrategy(){
         //delete agent after creation 
     }
 
-
-    // for(int i = 0; i < pathTable.table.size(); i++){
-    //     for(int j = 0; j < pathTable.table.size(); j++){
-    //         cout << "test" << endl;
-    //         //cout << "Pathtable: " + std::to_string(pathTable.table.at(i).at(j))<< endl; 
-    //     }
-    // }
- 
+    while(!atGoals(states)){
+     
+    }
  
     //Complete
     // t_start <- clock()
@@ -85,11 +80,13 @@ void TimeWrapper::runCommitmentStrategy(){
     // C <- Commit Strategy
     // STATES (agent positions pair, x y) <- {a1,a2, … …, an} 
     // Executed_actions ={}
+    // While  not goals :
+    // num_actions = C()
 
     //Needs clarification
     
-    // While  not goals :
-    // num_actions = C()
+
+
     // planning_time = num_actions * time per action
     // STATES , S , Executed_actions = execute(S, num_actions, Executed_actions)
     // S <-LNS.optimise(S, planning_time)
@@ -97,9 +94,15 @@ void TimeWrapper::runCommitmentStrategy(){
     // Return Executed_actions, wall clock time
 };
 
-// bool TimeWrapper::atGoals(vector<Agents*> states){
-//     return false;
-//     // for(int i = 0; i < states.size(); i++){
-//     //     if(states.at(i)->currentX != goalPositions.at(i))
-//     // }
-// };
+bool TimeWrapper::atGoals(vector<Agents> states){
+
+    std::vector<int> goalLocations = instance.getGoals();
+
+    for(int i = 0; i < states.size(); i++){
+        if(states[i].currentX != instance.getRowCoordinate(goalLocations[i]) && states[i].currentY != instance.getColCoordinate(goalLocations[i])){
+            return false; 
+        }
+    }
+    
+    return true;
+};

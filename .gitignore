@@ -11,6 +11,9 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+*.txt 
+*.csv
+
 # Prerequisites
 *.d
 
