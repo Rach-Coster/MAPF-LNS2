@@ -37,8 +37,7 @@ public:
         int neighbor_size, int num_of_iterations, bool init_lns, string  init_destory_name, bool use_sipp,
         bool truncate_initial_paths, int screen, PIBTPPS_option pipp_option);
     
-    LNS(const Instance& instance, double time_limit, int neighbor_size, int screen,
-        TLNS_options tlnsOptions, clock_t tStart);
+    LNS(const Instance& instance, TLNS_options tlnsOptions, clock_t tStart);
     
     ~LNS()
     {

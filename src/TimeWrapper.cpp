@@ -2,8 +2,6 @@
 #include <string>
 #include <iostream>
 
-using namespace std; 
-
 TimeWrapper::TimeWrapper(const Instance& instance, const double& timePerAction, const int& noOfCommitedActions,
     const string& metaHeuristic, const string& solutionType, const TLNS_options& options): 
     instance(instance), tlnsOptions(options){
@@ -52,30 +50,30 @@ void TimeWrapper::runCommitmentStrategy(){
     //make an LNS constructor that contains the strut and the time 
     //initLNS does not always provide a feasible solution
 
-    LNS lns(instance, tlnsOptions.time_limit, tlnsOptions.neighbourSize, 
-        tlnsOptions.screen, tlnsOptions, t_start); 
+    LNS lns(instance, tlnsOptions, t_start); 
+    
     lns.run();  
 
-    // PathTable pathTable = lns.getPathTable();
+    PathTable pathTable = lns.getPathTable();
+    clock_t wallClockTime = clock() - t_start; 
 
+    vector<Agents> states; 
 
-    // clock_t wallClockTime = clock() - t_start; 
+    for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){   
+        Agents agent;
+        agent.id = i; 
+        agent.currentX = instance.getCoordinate(i).first;
+        agent.currentY = instance.getCoordinate(i).second;
+        states.push_back(agent);
 
-    // vector<Agents*> states; 
+        //delete agent after creation 
+    }
 
-    // for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){
-     
-    //     Agents* agent;
-
-    //     agent->id = i;
-    //     agent->currentX = instance.getCoordinate(i).first;
-    //     agent->currentY = instance.getCoordinate(i).second;
-    //     states.push_back(agent);
-    // }
 
     // for(int i = 0; i < pathTable.table.size(); i++){
     //     for(int j = 0; j < pathTable.table.size(); j++){
-    //         cout << "Pathtable: " + pathTable.table.at(i).at(j); 
+    //         cout << "test" << endl;
+    //         //cout << "Pathtable: " + std::to_string(pathTable.table.at(i).at(j))<< endl; 
     //     }
     // }
  

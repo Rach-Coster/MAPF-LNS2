@@ -48,18 +48,12 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
 }
 
-LNS::LNS(const Instance& instance, double time_limit, int neighbor_size, int screen,
-    TLNS_options tlnsOptions, clock_t tStart):
-    BasicLNS(instance, time_limit, neighbor_size, screen), tlnsOptions(tlnsOptions){
-
-    init_algo_name = tlnsOptions.initAlgo;
-    replan_algo_name = tlnsOptions.replanAlgo; 
-    use_init_lns = tlnsOptions.initLNS; // use LNS to find initial solutions
-    truncate_initial_paths = tlnsOptions.truncatePaths;
-    num_of_iterations = tlnsOptions.maxIterations;
-    init_destory_name = tlnsOptions.initDestroyStrategy;
-    pipp_option = tlnsOptions.pipp_option; 
-
+LNS::LNS(const Instance& instance, TLNS_options tlnsOptions, clock_t tStart):
+    BasicLNS(instance, tlnsOptions.time_limit, tlnsOptions.neighbourSize, 
+    tlnsOptions.screen), tlnsOptions(tlnsOptions), init_algo_name(std::move(tlnsOptions.initAlgo)),
+    replan_algo_name(std::move(tlnsOptions.replanAlgo)), num_of_iterations(tlnsOptions.maxIterations),
+    use_init_lns(tlnsOptions.initLNS), init_destory_name(std::move(tlnsOptions.initDestroyStrategy)),
+    truncate_initial_paths(tlnsOptions.truncatePaths), path_table(instance.map_size), pipp_option(tlnsOptions.pipp_option){
 
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -104,14 +98,10 @@ bool LNS::run()
 {
     // only for statistic analysis, and thus is not included in runtime
     sum_of_distances = 0;
-    
-
 
     for (const auto & agent : agents)
-    {
         sum_of_distances += agent.path_planner->my_heuristic[agent.path_planner->start_location];
-    }
-
+    
     initial_solution_runtime = 0;
     start_time = Time::now();
     bool succ;
@@ -119,20 +109,14 @@ bool LNS::run()
     if (has_initial_solution)
         succ = fixInitialSolution();
     else
-        //hits here
         succ = getInitialSolution();
-
-    //cout << "post inital solution" << endl;
     
     initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-    //cout << "Init runtime " +  std::to_string(initial_solution_runtime) << endl;
-    //cout << "time limit " + std::to_string(time_limit) << endl;
 
     if (!succ && initial_solution_runtime < time_limit)
     {
         if (use_init_lns)
         {
-            //cout << "use init lns" << endl;
             init_lns = new InitLNS(instance, agents, time_limit - initial_solution_runtime,
                     replan_algo_name,init_destory_name, neighbor_size, screen);
             succ = init_lns->run();
@@ -151,7 +135,7 @@ bool LNS::run()
         }
         else // use random restart
         {
-            //cout << "random restart" << endl;
+            cout << "random restart" << endl;
             while (!succ && initial_solution_runtime < time_limit)
             {
                 succ = getInitialSolution();
@@ -440,8 +424,6 @@ bool LNS::getInitialSolution()
     neighbor.sum_of_costs = 0;
     bool succ = false;
 
-    //cout << "init algo name" + init_algo_name << endl; 
-
     if (init_algo_name == "EECBS")
         succ = runEECBS();
     else if (init_algo_name == "PP")
@@ -591,7 +573,6 @@ bool LNS::runCBS()
 }
 bool LNS::runPP()
 {
-    //Checked up to here
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
@@ -618,13 +599,16 @@ bool LNS::runPP()
                  << "Agent " << agents[id].id << endl;
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty()) break;
+        
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
             break;
         remaining_agents--;
+        //issue is with the path table
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
     }
+
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
     {
         return true;

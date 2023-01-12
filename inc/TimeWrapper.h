@@ -2,7 +2,10 @@
 #include "LNS.h"
 
 #include <string>
-using namespace std; 
+
+//temp
+#include <string.h>
+
 
 //Meta-heuristics from decision making 
 enum meta_heuristic {ONEACTIONAHEAD, ALLACTIONS, FIXEDACTIONSTEPS, DYNAMIC};
