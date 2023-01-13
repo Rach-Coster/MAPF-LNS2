@@ -1,14 +1,15 @@
 #include "TimeWrapper.h"
 #include <string>
 #include <iostream>
+#include <utility> 
 
 //temp
 #include <string.h>
 using namespace std; 
 
-TimeWrapper::TimeWrapper(const Instance& instance, const double& timePerAction, const int& noOfCommitedActions,
+TimeWrapper::TimeWrapper(const Instance& instance, const double& timePerAction, const int& noOfCommittedActions,
     const string& metaHeuristic, const string& solutionType, const TLNS_options& options): 
-    instance(instance), tlnsOptions(options){
+    instance(instance), time_per_action(timePerAction), no_of_committed_actions(noOfCommittedActions), tlnsOptions(options){
         
     if(metaHeuristic == "OneActionAhead"){
         m_heuristic = ONEACTIONAHEAD; 
@@ -39,39 +40,86 @@ TimeWrapper::TimeWrapper(const Instance& instance, const double& timePerAction, 
     }
 };
 
-
-
-void TimeWrapper::runCommitmentStrategy(){
+pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
     cout << "Hello from the commitment strategy" << endl; 
 
-    // Instance instance = lns->getInstance(); 
-    // May change into a map with an int and then a pair for the x,y pos 
-    // so that is it easier to retrieve and alter values
+    pair<clock_t, vector<AgentPositions>>completedPlan;
 
     clock_t t_start = clock(); 
-    //make an LNS constructor that contains the strut and the time 
+ 
     //initLNS does not always provide a feasible solution
 
     LNS lns(instance, tlnsOptions, t_start);     
     lns.run();  
- 
+
     clock_t wallClockTime = clock() - t_start; 
 
-    vector<Agents> states; 
+    //a node is passed and x,y can be accessed via instance.getRowCoordinate(), instance.getColCoordinate()   
+    vector<std::pair<Agent, vector<int>>> solutionPositions; 
+    
+    //Combine these later so that state pos is equal to the agent.path[no_of_committedActions]
+    vector<AgentPositions> states;
+    vector<int> startLocations = instance.getStarts(); 
 
+    //Gets start state for each agent
     for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){   
-        Agents agent;
-        agent.id = i; 
-        agent.currentX = instance.getCoordinate(i).first;
-        agent.currentY = instance.getCoordinate(i).second;
-        states.push_back(agent);
+        AgentPositions agentPos;
+        agentPos.id = i; 
+        agentPos.currentX = instance.getRowCoordinate(startLocations[i]); 
+        agentPos.currentY = instance.getColCoordinate(startLocations[i]);         
+        
+        states.push_back(agentPos);
 
-        //delete agent after creation 
+        //delete agentPosition after creation 
     }
+
+    //no_of_committed_actions post start position
+    //check if counter is needed or if the path is from no_of_committed
+    //actions to goal
 
     while(!atGoals(states)){
-     
+        //should planningTime also be a clock?
+        clock_t planningTime = no_of_committed_actions * time_per_action; 
+
+        for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){
+            Agent agent = lns.agents[i]; 
+            vector<int> movingAgent; 
+
+            //Correct by the txt file is in y,x rather than x,y which is dumb
+
+            for(int j = 0; j <= no_of_committed_actions; j++){
+                movingAgent.push_back(agent.path[j].location); 
+
+                if(j == no_of_committed_actions){
+                    states[i].currentX = instance.getRowCoordinate(agent.path[j].location);
+                    states[i].currentY = instance.getColCoordinate(agent.path[j].location);
+                }
+
+                //Do I add it to the history now or after the new LNS instance?
+                else {
+                    states[i].pastPositions.push_back(std::make_pair(
+                        instance.getRowCoordinate(agent.path[j].location),
+                        instance.getColCoordinate(agent.path[j].location))); 
+                }              
+            }
+
+            solutionPositions.push_back(std::make_pair(agent, movingAgent)); 
+            movingAgent.clear(); 
+  
+        }
+
+        //Need to determine how the plan is inserted
+
+        lns.~LNS();
+        LNS lns(instance, tlnsOptions, planningTime);     
+        lns.run();
+
+        wallClockTime += planningTime; 
     }
+
+    //States has all the agent positions (past - pastPositions and current - currentX/currentY)
+    completedPlan = std::make_pair(wallClockTime, states); 
+    return completedPlan; 
  
     //Complete
     // t_start <- clock()
@@ -82,24 +130,24 @@ void TimeWrapper::runCommitmentStrategy(){
     // Executed_actions ={}
     // While  not goals :
     // num_actions = C()
-
-    //Needs clarification
-    
-
-
     // planning_time = num_actions * time per action
-    // STATES , S , Executed_actions = execute(S, num_actions, Executed_actions)
+    //STATES , S , Executed_actions = execute(S, num_actions, Executed_actions)
+    
+    
     // S <-LNS.optimise(S, planning_time)
+
+    //Also done 
     // wall clock time+=planning_time
     // Return Executed_actions, wall clock time
 };
 
-bool TimeWrapper::atGoals(vector<Agents> states){
+bool TimeWrapper::atGoals(vector<AgentPositions> states){
 
     std::vector<int> goalLocations = instance.getGoals();
 
     for(int i = 0; i < states.size(); i++){
-        if(states[i].currentX != instance.getRowCoordinate(goalLocations[i]) && states[i].currentY != instance.getColCoordinate(goalLocations[i])){
+        if(states[i].currentX != instance.getRowCoordinate(goalLocations[i]) && 
+            states[i].currentY != instance.getColCoordinate(goalLocations[i])){
             return false; 
         }
     }

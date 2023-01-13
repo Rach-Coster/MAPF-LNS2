@@ -92,7 +92,7 @@ struct TLNS_options {
     PIBTPPS_option pipp_option; 
 };
 
-struct Agents {
+struct AgentPositions {
     int id;
     int currentX;
     int currentY;

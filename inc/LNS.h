@@ -37,6 +37,7 @@ public:
         int neighbor_size, int num_of_iterations, bool init_lns, string  init_destory_name, bool use_sipp,
         bool truncate_initial_paths, int screen, PIBTPPS_option pipp_option);
     
+    //Add path to constructor as an optional value and determine how it is passed to lns 
     LNS(const Instance& instance, TLNS_options tlnsOptions, clock_t tStart);
     
     ~LNS()

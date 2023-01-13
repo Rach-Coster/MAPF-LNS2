@@ -22,17 +22,18 @@ public:
     //Just in case the time_per_action can be changed after a meta-heuristic runs
     double time_per_action = 1;
     double rate_of_improvement = 0; 
+    int no_of_committed_actions = 1; 
 
-    TimeWrapper(const Instance&  instance, const double& timePerAction, const int& numberOfCommitedActions,
+    TimeWrapper(const Instance&  instance, const double& timePerAction, const int& noOfCommittedActions,
         const string& metaHeuristic, const string& solutionType, const TLNS_options& options);
 
 
-    void runCommitmentStrategy();
+    pair<clock_t, vector<AgentPositions>> runCommitmentStrategy();
 
 private: 
     meta_heuristic m_heuristic = ONEACTIONAHEAD; 
     solution_type s_type = FEASIBLE; 
 
-    bool atGoals(vector<Agents> states); 
+    bool atGoals(vector<AgentPositions> states); 
    
 };

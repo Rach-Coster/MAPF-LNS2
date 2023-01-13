@@ -4,7 +4,7 @@
 #include "AnytimeBCBS.h"
 #include "AnytimeEECBS.h"
 #include "PIBT/pibt.h"
-#include "TimeWrapper.h"    
+#include "TimeWrapper.h"   
 
 /* Main function */
 int main(int argc, char** argv)
@@ -164,7 +164,8 @@ int main(int argc, char** argv)
         );  
 
 
-        timeWrapper.runCommitmentStrategy();
+        pair<clock_t, vector<AgentPositions>> result = timeWrapper.runCommitmentStrategy();
+        cout << "it did a thing~~" << endl; 
     }
 
 	else
