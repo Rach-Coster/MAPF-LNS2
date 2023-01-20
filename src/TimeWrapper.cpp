@@ -54,12 +54,13 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
 
     clock_t wallClockTime = clock() - t_start; 
 
-    //a node is passed and x,y can be accessed via instance.getRowCoordinate(), instance.getColCoordinate()   
-    vector<std::pair<Agent, vector<int>>> solutionPositions; 
+    //a vertex is passed and x,y can be accessed via instance.getRowCoordinate(), instance.getColCoordinate()   
+    vector<std::pair<int, vector<int>>> solutionPositions; 
     
     //Combine these later so that state pos is equal to the agent.path[no_of_committedActions]
     vector<AgentPositions> states;
     vector<int> startLocations = instance.getStarts(); 
+    vector<int> goalLocations = instance.getGoals(); 
 
     //Gets start state for each agent
     for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){   
@@ -81,37 +82,52 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
         //should planningTime also be a clock?
         clock_t planningTime = no_of_committed_actions * time_per_action; 
 
-        for(int i = 0; i < instance.getDefaultNumberOfAgents(); i++){
-            Agent agent = lns.agents[i]; 
+        for(int i = 0; i < lns.agents.size(); i++){
+            //Agent agent = lns.agents[i];
+         
             vector<int> movingAgent; 
 
             //Correct by the txt file is in y,x rather than x,y which is dumb
 
             for(int j = 0; j <= no_of_committed_actions; j++){
-                movingAgent.push_back(agent.path[j].location); 
+                if(states[i].currentX == instance.getRowCoordinate(goalLocations[i]) && 
+                    states[i].currentY == instance.getColCoordinate(goalLocations[i])){
+                    break;
+                }
+
+                cout << "Location " + to_string(lns.agents[i].path[j].location) << endl; 
+                movingAgent.push_back(lns.agents[i].path[j].location); 
 
                 if(j == no_of_committed_actions){
-                    states[i].currentX = instance.getRowCoordinate(agent.path[j].location);
-                    states[i].currentY = instance.getColCoordinate(agent.path[j].location);
+                    states[i].currentX = instance.getRowCoordinate(lns.agents[i].path[j].location);
+                    states[i].currentY = instance.getColCoordinate(lns.agents[i].path[j].location);
                 }
 
                 //Do I add it to the history now or after the new LNS instance?
                 else {
                     states[i].pastPositions.push_back(std::make_pair(
-                        instance.getRowCoordinate(agent.path[j].location),
-                        instance.getColCoordinate(agent.path[j].location))); 
+                        instance.getRowCoordinate(lns.agents[i].path[j].location),
+                        instance.getColCoordinate(lns.agents[i].path[j].location))); 
                 }              
             }
 
-            solutionPositions.push_back(std::make_pair(agent, movingAgent)); 
-            movingAgent.clear(); 
-  
+            //Agent.id is temp, may change to i
+            solutionPositions.push_back(std::make_pair(lns.agents[i].id, movingAgent)); 
+            movingAgent.clear();   
         }
 
-        //Need to determine how the plan is inserted
+        // for(int i = 0; i < lns.agents.size(); i++){
+        //     if(states[i].currentX == instance.getRowCoordinate(goalLocations[i]) && 
+        //         states[i].currentY == instance.getColCoordinate(goalLocations[i]))
+        //     cout << "Agent: " + to_string(i) + " at goal location " << endl;
+        // }
 
-        lns.~LNS();
+
+        lns.~LNS(); 
+
         LNS lns(instance, tlnsOptions, planningTime);     
+        lns.loadTlnsPath(solutionPositions);
+        
         lns.run();
 
         wallClockTime += planningTime; 

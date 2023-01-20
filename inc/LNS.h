@@ -51,6 +51,7 @@ public:
     bool getInitialSolution();
     bool run();
     void validateSolution() const;
+    void loadTlnsPath(const vector<std::pair<int, vector<int>>> & solutionVec);  
     bool loadPaths(const string & file_name);
     void writeIterStatsToFile(const string & file_name) const;
     void writeResultToFile(const string & file_name) const;

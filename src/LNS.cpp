@@ -3,6 +3,8 @@
 #include <queue>
 #include<boost/tokenizer.hpp>
 #include <utility>
+//temp
+#include <string.h>
 
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
@@ -1103,6 +1105,29 @@ void LNS::writeResultToFile(const string & file_name) const
           num_LL_expanded << "," << num_LL_generated << "," << num_LL_reopened << "," << num_LL_runs << "," <<
           preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
     stats.close();
+}
+
+void LNS::loadTlnsPath(const vector<std::pair<int, vector<int>>> & solutionVec){
+    
+    for(int i = 0; i < agents.size(); i++){
+        for(int j = 0; j < solutionVec[i].second.size(); j++){
+            agents[i].path.emplace_back(solutionVec[i].second[j]);
+        }
+        
+        if (agents[i].path.front().location != agents[i].path_planner->start_location)
+        {
+            cerr << "Agent " << i <<"'s path starts at " << agents[i].path.front().location
+            << "=(" << instance.getColCoordinate(agents[i].path.front().location)
+            << "," << instance.getRowCoordinate(agents[i].path.front().location)
+            << "), which is different from its start location " << agents[i].path_planner->start_location << endl
+            << "=(" << instance.getColCoordinate(agents[i].path_planner->start_location)
+            << "," << instance.getRowCoordinate(agents[i].path_planner->start_location)
+            << ")" << endl;
+        }
+    }
+
+    use_init_lns = false;
+    has_initial_solution = true;
 }
 
 bool LNS::loadPaths(const string & file_name)
