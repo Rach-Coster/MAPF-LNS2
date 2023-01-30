@@ -645,3 +645,7 @@ bool Instance::hasCollision(const Path& p1, const Path& p2) const
     }
     return false;
 }
+
+void Instance::setStartLocation(AgentPositions& state){
+	start_locations.at(state.id) = linearizeCoordinate(state.currentX, state.currentY); 
+}

@@ -1110,9 +1110,10 @@ void LNS::writeResultToFile(const string & file_name) const
 void LNS::loadTlnsPath(const vector<std::pair<int, vector<int>>> & solutionVec){
     
     for(int i = 0; i < agents.size(); i++){
-        for(int j = 0; j < solutionVec[i].second.size(); j++){
-            agents[i].path.emplace_back(solutionVec[i].second[j]);
-        }
+    //     for(int j = 0; j < solutionVec[i].second.size(); j++){
+    //         agents[i].path_planner->start_location = solutionVec[i].second[j];
+    //         agents[i].path = agents[i].path_planner->start_location;
+    //     }
         
         if (agents[i].path.front().location != agents[i].path_planner->start_location)
         {

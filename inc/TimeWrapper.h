@@ -24,7 +24,7 @@ public:
     double rate_of_improvement = 0; 
     int no_of_committed_actions = 1; 
 
-    TimeWrapper(const Instance&  instance, const double& timePerAction, const int& noOfCommittedActions,
+    TimeWrapper(Instance&  instance, const double& timePerAction, const int& noOfCommittedActions,
         const string& metaHeuristic, const string& solutionType, const TLNS_options& options);
 
 
