@@ -94,8 +94,7 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
                     states[i].currentY == instance.getColCoordinate(goalLocations[i])){
                     break;
                 }
-
-                cout << "Location " + to_string(lns->agents[i].path[j].location) << endl; 
+                
                 movingAgent.push_back(lns->agents[i].path[j].location); 
 
                 if(j == no_of_committed_actions){
@@ -119,11 +118,11 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
             movingAgent.clear();   
         }
 
+        lns->loadTlnsPath(solutionPositions);
+        
         delete lns; 
 
         lns = new LNS(instance, tlnsOptions, planningTime);      
-        lns->loadTlnsPath(solutionPositions);
-        
         lns->run();
 
         wallClockTime += planningTime; 

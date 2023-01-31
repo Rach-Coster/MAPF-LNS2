@@ -18,7 +18,7 @@ class TimeWrapper
 {
 public: 
     TLNS_options tlnsOptions;
-    Instance instance; 
+    Instance& instance; 
     //Just in case the time_per_action can be changed after a meta-heuristic runs
     double time_per_action = 1;
     double rate_of_improvement = 0; 
