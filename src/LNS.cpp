@@ -3,8 +3,13 @@
 #include <queue>
 #include<boost/tokenizer.hpp>
 #include <utility>
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+using namespace boost::multiprecision;
+
 //temp
 #include <string.h>
+
 
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
@@ -244,8 +249,10 @@ bool LNS::run()
     if (average_group_size > 0)
         average_group_size /= (double)(iteration_stats.size() - 1);
 
+    cpp_dec_float_100 converted_value(runtime);
+
     cout << getSolverName() << ": "
-         << "runtime = " << runtime << ", "
+         << "runtime = " << converted_value << ", "
          << "deleted timesteps = " << delete_timesteps << ","
          << "iterations = " << iteration_stats.size() << ", "
          << "solution cost = " << sum_of_costs << ", "

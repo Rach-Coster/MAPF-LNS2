@@ -11,6 +11,11 @@
 #include "pps.h"
 #include "winpibt.h"
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+using namespace boost::multiprecision;
+
+
 enum destroy_heuristic { RANDOMAGENTS, RANDOMWALK, INTERSECTION, DESTORY_COUNT };
 
 // TODO: adaptively change the neighbor size, that is,

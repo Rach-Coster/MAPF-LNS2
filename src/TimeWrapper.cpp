@@ -6,6 +6,7 @@
 //temp
 #include <string.h>
 using namespace std; 
+using namespace boost::multiprecision;
 
 TimeWrapper::TimeWrapper(Instance& instance, const double& timePerAction, const int& noOfCommittedActions,
     const string& metaHeuristic, const string& solutionType, const TLNS_options& options): 
@@ -119,9 +120,9 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
         }
 
         lns->loadTlnsPath(solutionPositions);
-        
-        delete lns; 
 
+        delete lns; 
+        //add iteration limit 100k
         lns = new LNS(instance, tlnsOptions, planningTime);      
         lns->run();
 

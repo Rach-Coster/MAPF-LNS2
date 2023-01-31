@@ -1,5 +1,8 @@
 #pragma once
 #include "BasicLNS.h"
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+using namespace boost::multiprecision;
 
 enum init_destroy_heuristic { TARGET_BASED, COLLISION_BASED, RANDOM_BASED, INIT_COUNT };
 

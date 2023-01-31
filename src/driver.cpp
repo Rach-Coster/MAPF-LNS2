@@ -1,10 +1,16 @@
 ﻿#include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
 #include "LNS.h"
 #include "AnytimeBCBS.h"
 #include "AnytimeEECBS.h"
 #include "PIBT/pibt.h"
 #include "TimeWrapper.h"   
+
+//temp
+#include <string.h>
+
+using namespace boost::multiprecision;
 
 /* Main function */
 int main(int argc, char** argv)
@@ -164,9 +170,14 @@ int main(int argc, char** argv)
             tlnsOptions
         );  
 
+        clock_t start = clock(); 
 
         pair<clock_t, vector<AgentPositions>> result = timeWrapper.runCommitmentStrategy();
-        cout << "it did a thing~~" << endl; 
+
+        cpp_dec_float_100 runtime = ((cpp_dec_float_100) (result.first - start)) / CLOCKS_PER_SEC;
+
+        cout << "Total Clock time is: " << runtime.str() << " seconds" << endl; 
+
     }
 
 	else

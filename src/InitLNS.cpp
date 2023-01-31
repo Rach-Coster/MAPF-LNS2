@@ -4,6 +4,11 @@
 #include "GCBS.h"
 #include "PBS.h"
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+using namespace boost::multiprecision;
+
+
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen), agents(agents), replan_algo_name(replan_algo_name),
@@ -814,8 +819,10 @@ void InitLNS::writeResultToFile(const string & file_name, int sum_of_distances, 
         auc += prev->num_of_colliding_pairs * (time_limit - prev->runtime);
     }
 
+    cpp_dec_float_100 converted_value(runtime);
+
     ofstream stats(file_name, std::ios::app);
-    stats << runtime << "," << iteration_stats.back().num_of_colliding_pairs << "," <<
+    stats << converted_value << "," << iteration_stats.back().num_of_colliding_pairs << "," <<
           sum_of_costs << "," << iteration_stats.front().num_of_colliding_pairs << "," <<
           iteration_stats.front().sum_of_costs << "," << sum_of_distances << "," <<
           iteration_stats.size() << "," << average_group_size << "," <<
