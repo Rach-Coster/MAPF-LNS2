@@ -44,11 +44,14 @@ TimeWrapper::TimeWrapper(Instance& instance, const double& timePerAction, const 
 pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
     cout << "Hello from the commitment strategy" << endl; 
 
-    pair<clock_t, vector<AgentPositions>>completedPlan;
-
+    pair<clock_t, vector<AgentPositions>> completedPlan;
+    //vector<pair<int, vector<int>> sumOfCosts; 
+    //vector<pair<int, vector<int>> remainingCost; 
+    
+    //The clock is the makespan; 
     clock_t t_start = clock(); 
  
-    //initLNS does not always provide a feasible solution
+    //Note: initLNS does not always provide a feasible solution
 
     LNS* lns = new LNS(instance, tlnsOptions, t_start);     
     lns->run();  
@@ -118,14 +121,16 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
             solutionPositions.push_back(std::make_pair(lns->agents[i].id, movingAgent)); 
             movingAgent.clear();   
         }
-
+        //pass solution positions to initLNS too or else it will fail on collision
         lns->loadTlnsPath(solutionPositions);
 
         delete lns; 
         //add iteration limit 100k
+        tlnsOptions.maxIterations = 100000;
+    
         lns = new LNS(instance, tlnsOptions, planningTime);      
         lns->run();
-
+    
         wallClockTime += planningTime; 
     }
 

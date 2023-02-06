@@ -148,7 +148,8 @@ int main(int argc, char** argv)
         tlnsOptions.replanAlgo = vm["replanAlgo"].as<string>();
         tlnsOptions.destroyStrategy = vm["destoryStrategy"].as<string>();
         tlnsOptions.neighbourSize = vm["neighborSize"].as<int>();
-        tlnsOptions.maxIterations = vm["maxIterations"].as<int>();
+        //Skips LNS and goes directly to LNS2
+        tlnsOptions.maxIterations = 0;
         tlnsOptions.initLNS = vm["initLNS"].as<bool>();
         tlnsOptions.initDestroyStrategy = vm["initDestoryStrategy"].as<string>();
         tlnsOptions.sipp = vm["sipp"].as<bool>(),
