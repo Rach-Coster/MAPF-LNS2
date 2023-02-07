@@ -5,6 +5,9 @@
 
 //temp
 #include <string.h>
+#include <vector>
+#include <algorithm>
+
 using namespace std; 
 using namespace boost::multiprecision;
 
@@ -54,7 +57,8 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
     //Note: initLNS does not always provide a feasible solution
 
     LNS* lns = new LNS(instance, tlnsOptions, t_start);     
-    lns->run();  
+    lns->run();
+    assert(lns->validateSolution());  
 
     clock_t wallClockTime = clock() - t_start; 
 
@@ -89,48 +93,53 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
         for(int i = 0; i < lns->agents.size(); i++){
             //Agent agent = lns.agents[i];
          
-            vector<int> movingAgent; 
+            std::vector<int> movingAgent; 
 
             //Correct by the txt file is in y,x rather than x,y which is dumb
 
-            for(int j = 0; j <= no_of_committed_actions; j++){
-                if(states[i].currentX == instance.getRowCoordinate(goalLocations[i]) && 
-                    states[i].currentY == instance.getColCoordinate(goalLocations[i])){
-                    break;
-                }
-                
-                movingAgent.push_back(lns->agents[i].path[j].location); 
-
+            for(int j = 0; j <= no_of_committed_actions; j++){    
                 if(j == no_of_committed_actions){
                     states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j].location);
                     states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j].location);
-
                 }
 
-                //Do I add it to the history now or after the new LNS instance?
+                else if(states[i].currentX == instance.getRowCoordinate(goalLocations[i]) && 
+                    states[i].currentY == instance.getColCoordinate(goalLocations[i])){
+                    break;
+                }
+
                 else {
                     states[i].pastPositions.push_back(std::make_pair(
                         instance.getRowCoordinate(lns->agents[i].path[j].location),
                         instance.getColCoordinate(lns->agents[i].path[j].location))); 
-                }              
+                }  
+
+                movingAgent.push_back(instance.linearizeCoordinate(states[i].currentX, states[i].currentY)); 
+            
             }
 
-            instance.setStartLocation(states[i]); 
+            instance.setStartLocation(states[i]);
+
+            
 
             //Agent.id is temp, may change to i
             solutionPositions.push_back(std::make_pair(lns->agents[i].id, movingAgent)); 
-            movingAgent.clear();   
+            //movingAgent.clear();   
         }
         //pass solution positions to initLNS too or else it will fail on collision
-        lns->loadTlnsPath(solutionPositions);
-
         delete lns; 
+
+        
+
         //add iteration limit 100k
         tlnsOptions.maxIterations = 100000;
     
-        lns = new LNS(instance, tlnsOptions, planningTime);      
+        lns = new LNS(instance, tlnsOptions, planningTime);  
+        lns->loadTlnsPath(solutionPositions);
+      
         lns->run();
-    
+        assert(lns->validateSolution());  
+
         wallClockTime += planningTime; 
     }
 

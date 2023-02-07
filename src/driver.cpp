@@ -9,6 +9,8 @@
 
 //temp
 #include <string.h>
+#include <sstream>
+#include <iomanip>
 
 using namespace boost::multiprecision;
 
@@ -174,10 +176,14 @@ int main(int argc, char** argv)
         clock_t start = clock(); 
 
         pair<clock_t, vector<AgentPositions>> result = timeWrapper.runCommitmentStrategy();
+        result.first = result.first += start; 
 
-        cpp_dec_float_100 runtime = ((cpp_dec_float_100) (result.first - start)) / CLOCKS_PER_SEC;
+        //std::ostringstream stream; 
 
-        cout << "Total Clock time is: " << runtime.str() << " seconds" << endl; 
+        __float128 runtime = ((__float128) (result.first - start)) / CLOCKS_PER_SEC;
+
+        // cout << "Total Clock time is: " << std::fixed << std::setprecision(8) 
+        //     << (double) runtime << " seconds" << endl; 
 
     }
 

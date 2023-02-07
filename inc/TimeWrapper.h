@@ -5,6 +5,8 @@
 
 //temp
 #include <string.h>
+#include <vector>
+#include <algorithm>
 
 
 //Meta-heuristics from decision making 
