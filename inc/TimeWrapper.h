@@ -31,11 +31,14 @@ public:
 
 
     pair<clock_t, vector<AgentPositions>> runCommitmentStrategy();
+    
+    void writePathsToFile(const string & file_name, vector<AgentPositions> agentPositions);
 
 private: 
     meta_heuristic m_heuristic = ONEACTIONAHEAD; 
     solution_type s_type = FEASIBLE; 
 
-    bool atGoals(vector<AgentPositions> states); 
+    bool atGoals(vector<AgentPositions> states);
+    
    
 };

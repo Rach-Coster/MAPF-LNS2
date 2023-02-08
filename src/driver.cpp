@@ -183,7 +183,10 @@ int main(int argc, char** argv)
         __float128 runtime = ((__float128) (result.first - start)) / CLOCKS_PER_SEC;
 
         // cout << "Total Clock time is: " << std::fixed << std::setprecision(8) 
-        //     << (double) runtime << " seconds" << endl; 
+        //     << (double) runtime << " seconds" << endl;
+
+        if (vm.count("outputPaths"))
+                timeWrapper.writePathsToFile(vm["outputPaths"].as<string>(), result.second); 
 
     }
 

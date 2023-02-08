@@ -48,8 +48,13 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
     cout << "Hello from the commitment strategy" << endl; 
 
     pair<clock_t, vector<AgentPositions>> completedPlan;
-    //vector<pair<int, vector<int>> sumOfCosts; 
-    //vector<pair<int, vector<int>> remainingCost; 
+
+    vector<std::pair<int, vector<int>>> sumOfCosts; 
+    std::vector<int> actionCost;
+
+ 
+    std::vector<pair<int, vector<int>>> remainingCost; 
+    std::vector<int> remainingActionCost;
     
     //The clock is the makespan; 
     clock_t t_start = clock(); 
@@ -94,7 +99,7 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
             //Agent agent = lns.agents[i];
          
             std::vector<int> movingAgent; 
-
+            
             //Correct by the txt file is in y,x rather than x,y which is dumb
 
             for(int j = 0; j <= no_of_committed_actions; j++){    
@@ -115,8 +120,22 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
                 }  
 
                 movingAgent.push_back(instance.linearizeCoordinate(states[i].currentX, states[i].currentY)); 
-            
+                
+                actionCost.push_back(no_of_committed_actions * time_per_action);
+
+                int amt = 0; 
+                //convert to function
+                for(int k = 0; k < lns->agents[i].path.size(); k++){
+                    if(lns->agents[i].path[k].location == instance.linearizeCoordinate(states[i].currentX, states[i].currentY)){
+                        amt = lns->agents[i].path.size() - (k + 1); 
+                    }
+                }
+                remainingActionCost.push_back(amt * time_per_action); 
             }
+
+            
+            sumOfCosts.push_back(std::make_pair(i, actionCost)); 
+            remainingCost.push_back(std::make_pair(i, remainingActionCost)); 
 
             instance.setStartLocation(states[i]);
 
@@ -142,6 +161,7 @@ pair<clock_t, vector<AgentPositions>>TimeWrapper::runCommitmentStrategy(){
 
         wallClockTime += planningTime; 
     }
+
 
     //States has all the agent positions (past - pastPositions and current - currentX/currentY)
     completedPlan = std::make_pair(wallClockTime, states); 
@@ -180,3 +200,26 @@ bool TimeWrapper::atGoals(vector<AgentPositions> states){
     
     return true;
 };
+
+void TimeWrapper::writePathsToFile(const string & file_name, vector<AgentPositions> agentPositions)
+{
+    std::ofstream output;
+    output.open(file_name);
+
+    for (const auto &agent : agentPositions)
+    {
+        output<< "---TLNS Agent Paths ---" << endl;
+
+        output << "Agent " << agent.id << ":";
+        for (int i =  0; i < agent.pastPositions.size(); i++){
+            output << "(" << agent.pastPositions[i].first << "," <<
+                            agent.pastPositions[i].second << ")->";
+        }
+
+        output << "(" << agent.currentX << "," <<
+                        agent.currentY << ")->";
+        output << endl;
+    }
+
+    output.close();
+}

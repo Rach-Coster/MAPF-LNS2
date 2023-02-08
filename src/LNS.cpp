@@ -232,7 +232,7 @@ bool LNS::run()
                 destroy_weights[selected_neighbor] =
                         (1 - decay_factor) * destroy_weights[selected_neighbor];
         }
-        runtime = ((fsec)(Time::now() - start_time)).count();
+        
         sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
         if (screen >= 1)
             cout << "Iteration " << iteration_stats.size() << ", "
