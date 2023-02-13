@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 
         clock_t start = clock(); 
 
-        pair<clock_t, vector<AgentPositions>> result = timeWrapper.runCommitmentStrategy();
+        pair<clock_t, TLNS_measures> result = timeWrapper.runCommitmentStrategy();
         result.first = result.first += start; 
 
         //std::ostringstream stream; 
@@ -186,8 +186,10 @@ int main(int argc, char** argv)
         //     << (double) runtime << " seconds" << endl;
 
         if (vm.count("outputPaths"))
-                timeWrapper.writePathsToFile(vm["outputPaths"].as<string>(), result.second); 
+                timeWrapper.writePathsToFile(vm["outputPaths"].as<string>(), result.second.states); 
 
+        if (vm.count("output"))
+            timeWrapper.writeResultToFile(vm["output"].as<string>() + ".csv", result.second);
     }
 
 	else

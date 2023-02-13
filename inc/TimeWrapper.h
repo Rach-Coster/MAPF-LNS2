@@ -15,6 +15,29 @@ enum meta_heuristic {ONEACTIONAHEAD, ALLACTIONS, FIXEDACTIONSTEPS, DYNAMIC};
 //Result from init LNS
 enum solution_type {FEASIBLE, NONFEASIBLE};
 
+struct TLNS_measures {
+
+    //Cost of agents after the runthrough of initLNS 
+    vector<pair<int, int>> initCommitmentCost; 
+
+    //Number of executions per execution, per agent
+    //Kinda redundant but might be nice for data gathering
+    vector<pair<int, vector<int>>> commitmentCostPerAgent;
+
+    //Accumulative number of executions, per agent from start until goal 
+    vector<pair<int, vector<int>>> accumulativeCostPerAgent; 
+
+    //Number of executions left until the agent reaches the goal location
+    vector<pair<int, vector<int>>> remainingCostPerAgent;
+
+    //Accumulative commitment cost of all agents per iteration 
+    vector<pair<int, int>> commitmentCostPerExecution; 
+
+    vector<AgentPositions> states; 
+
+    //temp
+    clock_t runtime = 1;
+};
 
 class TimeWrapper
 {
@@ -30,9 +53,10 @@ public:
         const string& metaHeuristic, const string& solutionType, const TLNS_options& options);
 
 
-    pair<clock_t, vector<AgentPositions>> runCommitmentStrategy();
-    
+    pair<clock_t, TLNS_measures> runCommitmentStrategy();
+
     void writePathsToFile(const string & file_name, vector<AgentPositions> agentPositions);
+    void writeResultToFile(const string & file_name, TLNS_measures & tlns_Measures);
 
 private: 
     meta_heuristic m_heuristic = ONEACTIONAHEAD; 
