@@ -7,9 +7,6 @@
 
 using namespace boost::multiprecision;
 
-//temp
-#include <string.h>
-
 
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
@@ -52,7 +49,7 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
 }
 
-LNS::LNS(const Instance& instance, TLNS_options tlnsOptions, clock_t tStart):
+LNS::LNS(const Instance& instance, TLNS_options tlnsOptions):
     BasicLNS(instance, tlnsOptions.time_limit, tlnsOptions.neighbourSize, 
     tlnsOptions.screen), tlnsOptions(tlnsOptions), init_algo_name(std::move(tlnsOptions.initAlgo)),
     replan_algo_name(std::move(tlnsOptions.replanAlgo)), num_of_iterations(tlnsOptions.maxIterations),
@@ -1203,27 +1200,7 @@ void LNS::loadTlnsPath(const vector<std::pair<int, vector<int>>>& solutionVec){
             agents[i].path.push_back(pathEntry); 
 
         }
-      
-        //agents[i].path_planner->start_location = solutionVec[i].second; 
 
-        // for(int j = 0; j < solutionVec[i].second.size(); j++){
-        //     PathEntry pathEntry;
-        //     pathEntry.location = solutionVec[i].second[j]; 
-        //     agents[i].path.push_back(pathEntry); 
-        // }
-        
-    
-
-        // if (agents[i].path.front().location != agents[i].path_planner->start_location)
-        // {
-        //     cerr << "Agent " << i <<"'s path starts at " << agents[i].path.front().location
-        //     << "=(" << instance.getColCoordinate(agents[i].path.front().location)
-        //     << "," << instance.getRowCoordinate(agents[i].path.front().location)
-        //     << "), which is different from its start location " << agents[i].path_planner->start_location << endl
-        //     << "=(" << instance.getColCoordinate(agents[i].path_planner->start_location)
-        //     << "," << instance.getRowCoordinate(agents[i].path_planner->start_location)
-        //     << ")" << endl;
-        // }
     }
 
     use_init_lns = false;

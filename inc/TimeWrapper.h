@@ -20,6 +20,9 @@ struct TLNS_measures {
     //Cost of agents after the runthrough of initLNS 
     vector<pair<int, int>> initCommitmentCost; 
 
+    //Cost of agents with path that may contain collisions 
+    vector<pair<int, int>> heuristicCommitmentCost; 
+
     //Number of executions per execution, per agent
     //Kinda redundant but might be nice for data gathering
     vector<pair<int, vector<int>>> commitmentCostPerAgent;
@@ -35,8 +38,7 @@ struct TLNS_measures {
 
     vector<AgentPositions> states; 
 
-    //temp
-    clock_t runtime = 1;
+    vector<pair<int, double>> processingPerExecution; 
 };
 
 class TimeWrapper
@@ -53,7 +55,7 @@ public:
         const string& metaHeuristic, const string& solutionType, const TLNS_options& options);
 
 
-    pair<clock_t, TLNS_measures> runCommitmentStrategy();
+    pair<double, TLNS_measures> runCommitmentStrategy();
 
     void writePathsToFile(const string & file_name, vector<AgentPositions> agentPositions);
     void writeResultToFile(const string & file_name, TLNS_measures & tlns_Measures);
@@ -63,6 +65,7 @@ private:
     solution_type s_type = FEASIBLE; 
 
     bool atGoals(vector<AgentPositions> states);
-    
+
+    high_resolution_clock::time_point start_time;
    
 };

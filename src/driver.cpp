@@ -173,17 +173,10 @@ int main(int argc, char** argv)
             tlnsOptions
         );  
 
-        clock_t start = clock(); 
+        pair<double, TLNS_measures> result = timeWrapper.runCommitmentStrategy();
+     
 
-        pair<clock_t, TLNS_measures> result = timeWrapper.runCommitmentStrategy();
-        result.first = result.first += start; 
-
-        //std::ostringstream stream; 
-
-        __float128 runtime = ((__float128) (result.first - start)) / CLOCKS_PER_SEC;
-
-        // cout << "Total Clock time is: " << std::fixed << std::setprecision(8) 
-        //     << (double) runtime << " seconds" << endl;
+        cout << "Total Clock time is: " << result.first << " seconds" << endl;
 
         if (vm.count("outputPaths"))
                 timeWrapper.writePathsToFile(vm["outputPaths"].as<string>(), result.second.states); 

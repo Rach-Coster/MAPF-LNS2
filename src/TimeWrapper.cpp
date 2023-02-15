@@ -52,27 +52,27 @@ TimeWrapper::TimeWrapper(Instance &instance, const double &timePerAction, const 
     }
 };
 
-pair<clock_t, TLNS_measures> TimeWrapper::runCommitmentStrategy()
+pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
 {
-    cout << "Hello from the commitment strategy" << endl;
+    pair<double, TLNS_measures> completedPlan; 
 
     TLNS_measures tlns_measures;
-    pair<clock_t, TLNS_measures> completedPlan;
 
     // The clock is the makespan;
-    clock_t t_start = clock();
+    start_time = Time::now();
 
     // Note: initLNS does not always provide a feasible solution
     int iterationNo = 0;
 
-    LNS *lns = new LNS(instance, tlnsOptions, t_start);
+    LNS *lns = new LNS(instance, tlnsOptions);
+
     lns->run();
     assert(lns->validateSolution());
 
-    clock_t wallClockTime = clock() - t_start;
+    double wallClockTime = ((fsec)(Time::now() - start_time)).count();
 
     // a vertex is passed and x,y can be accessed via instance.getRowCoordinate(), instance.getColCoordinate()
-    vector<std::pair<int, vector<int>>> solutionPositions;
+    vector<pair<int, vector<int>>> solutionPositions;
 
     // Combine these later so that state pos is equal to the agent.path[no_of_committedActions]
     vector<int> startLocations = instance.getStarts();
@@ -86,8 +86,12 @@ pair<clock_t, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         agentPos.currentX = instance.getRowCoordinate(startLocations[i]);
         agentPos.currentY = instance.getColCoordinate(startLocations[i]);
 
+        int heuristicCost = lns->agents[i].path_planner->my_heuristic[lns->agents[i].path_planner->start_location];
+
         tlns_measures.states.push_back(agentPos);
         tlns_measures.initCommitmentCost.push_back(make_pair(lns->agents[i].id, lns->agents[i].path.size()));
+        
+        tlns_measures.heuristicCommitmentCost.push_back(make_pair(lns->agents[i].id, heuristicCost));
     }
 
     // no_of_committed_actions post start position
@@ -97,7 +101,7 @@ pair<clock_t, TLNS_measures> TimeWrapper::runCommitmentStrategy()
 
     while (!atGoals(tlns_measures.states))
     {
-        clock_t planningTime = no_of_committed_actions * time_per_action;
+        auto planningTime = no_of_committed_actions * time_per_action;
         iterationNo++;
     
         int costPerExecution = 0;
@@ -147,7 +151,7 @@ pair<clock_t, TLNS_measures> TimeWrapper::runCommitmentStrategy()
             costPerExecution += tlns_measures.commitmentCostPerAgent[i].second.back();
 
             instance.setStartLocation(tlns_measures.states[i]);
-            solutionPositions.push_back(std::make_pair(lns->agents[i].id, movingAgent));
+            solutionPositions.push_back(make_pair(lns->agents[i].id, movingAgent));
         }
 
         tlns_measures.commitmentCostPerExecution.push_back(make_pair(iterationNo, costPerExecution));
@@ -158,25 +162,34 @@ pair<clock_t, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         // add iteration limit 100k
         tlnsOptions.maxIterations = 100000;
 
-        lns = new LNS(instance, tlnsOptions, planningTime);
+        lns = new LNS(instance, tlnsOptions);
+
+        high_resolution_clock::time_point agent_processing_time = Time::now(); 
+
         lns->loadTlnsPath(solutionPositions);
 
         lns->run();
+        
+        double processingTime = ((fsec)(Time::now() - agent_processing_time)).count();
+
+        tlns_measures.processingPerExecution.push_back(make_pair(iterationNo, processingTime));
+
         assert(lns->validateSolution());
+
 
         wallClockTime += planningTime;
     }
 
     // States has all the agent positions (past - pastPositions and current - currentX/currentY)
 
-    completedPlan = std::make_pair(wallClockTime, tlns_measures); 
+    completedPlan = make_pair(wallClockTime, tlns_measures); 
     return completedPlan;
 };
 
 bool TimeWrapper::atGoals(vector<AgentPositions> states)
 {
 
-    std::vector<int> goalLocations = instance.getGoals();
+    vector<int> goalLocations = instance.getGoals();
 
     for (int i = 0; i < states.size(); i++)
     {
@@ -192,7 +205,7 @@ bool TimeWrapper::atGoals(vector<AgentPositions> states)
 
 void TimeWrapper::writePathsToFile(const string &file_name, vector<AgentPositions> agentPositions)
 {
-    std::ofstream output;
+    ofstream output;
     output.open(file_name);
 
     for (const auto &agent : agentPositions)
@@ -216,72 +229,78 @@ void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tl
 {
     string name = file_name;
 
-    std::ifstream infile(name);
-    bool exist = infile.good();
-    infile.close();
-    if (!exist)
-    {
-        ofstream addHeads(name);
-        addHeads << "Runtime, InitLNS Solution - Agent No, InitLNS Solution - Cost,"
-                 << "Commitment Cost Per Agent, Accumulative Cost Per Agent,"
-                 << "Remaining Cost Per Agent, Iterations, Cost Per Execution"
-                 << endl; 
-                 //<< "Group Size, Prepocessing Time, SolverName, Instance Name " <<;
+    ofstream addHeads(name, ios::out);
+    addHeads << "Iteration No, Processing Per Execution, Agent ID,Init Cost,Commitment Cost,Accumulative Cost,"
+    << "Remaining Cost,Heuristic Commitment Cost" << endl; 
+    addHeads.close();
 
-        addHeads.close();
-    }
-    ofstream stats(name, std::ofstream::out | std::ofstream::trunc);
-    stats << "Runtime: " << tlns_measures.runtime << "\n"; 
-
-    //cleanup into for each loops
-    for(int i = 0; i < tlns_measures.initCommitmentCost.size(); i++){
-        stats << "Init Commitment - Agent Id: " << tlns_measures.initCommitmentCost[i].first << ", Init Commitment Cost: " << tlns_measures.initCommitmentCost[i].second << "\n";
-    }
-
-    for(int i = 0; i < tlns_measures.commitmentCostPerAgent.size(); i++){
-        stats <<"Commitment Cost Per Agent " << i << ": "; 
-        for(int j = 0; j < tlns_measures.commitmentCostPerAgent[i].second.size(); j++){
-           stats << tlns_measures.commitmentCostPerAgent[i].second[j] <<  ",";
-        }
-
-        stats << "\n"; 
-    }
-
-    for(int i = 0; i < tlns_measures.accumulativeCostPerAgent.size(); i++){
-        stats << "Accumulative Cost Per Agent " << i << ": ";
-        for(int j = 0; j < tlns_measures.accumulativeCostPerAgent[i].second.size(); j++){
-            stats << tlns_measures.accumulativeCostPerAgent[i].second[j] << ",";
-        }
-
-        stats << "\n";
-    }
-
-    for(int i = 0; i < tlns_measures.remainingCostPerAgent.size(); i++){
-        stats << "Remaining Cost Per Agent " << i << ": "; 
-        for(int j = 0; j < tlns_measures.remainingCostPerAgent[i].second.size(); j++){
-            stats << tlns_measures.remainingCostPerAgent[i].second[j] << ","; 
-        }
-
-        stats << "\n";
-    }
-
+    ofstream stats(name, ios::app);
     for(int i = 0; i < tlns_measures.commitmentCostPerExecution.size(); i++){
-        stats << "Commitment Cost Per Execution " << i << ": " << tlns_measures.commitmentCostPerExecution[i].first << ",";
-        stats << tlns_measures.commitmentCostPerExecution[i].second << "\n";
-        
-    }
+        for(int j = 0; j < tlns_measures.initCommitmentCost.size(); j++){
+            stats << i << ","; 
+            stats << tlns_measures.processingPerExecution[i].second  << ",";
+            stats << tlns_measures.initCommitmentCost[j].first << "," << tlns_measures.initCommitmentCost[j].second << ","; 
+            stats << tlns_measures.commitmentCostPerAgent[j].second[i] << ",";
+            stats << tlns_measures.accumulativeCostPerAgent[j].second[i] << ",";
+            stats << tlns_measures.remainingCostPerAgent[j].second[i];
 
+            if(i == 0){
+                stats << "," << tlns_measures.heuristicCommitmentCost[j].second;
+            }
+
+            else {
+                stats << ",0";
+            }
+
+            stats << endl; 
+        }
+    }
     stats.close(); 
+    
+    
+    // stats << "Runtime: " << tlns_measures.runtime << "\n"; 
+
+    // //cleanup into for each loops
+    // for(int i = 0; i < tlns_measures.initCommitmentCost.size(); i++){
+    //     stats << "Init Commitment - Agent Id: " << tlns_measures.initCommitmentCost[i].first << ", Init Commitment Cost: " << tlns_measures.initCommitmentCost[i].second << "\n";
+    // }
+
+    // for(int i = 0; i < tlns_measures.commitmentCostPerAgent.size(); i++){
+    //     stats <<"Commitment Cost Per Agent " << i << ": "; 
+    //     for(int j = 0; j < tlns_measures.commitmentCostPerAgent[i].second.size(); j++){
+    //        stats << tlns_measures.commitmentCostPerAgent[i].second[j] <<  ",";
+    //     }
+
+    //     stats << "\n"; 
+    // }
+
+    // for(int i = 0; i < tlns_measures.accumulativeCostPerAgent.size(); i++){
+    //     stats << "Accumulative Cost Per Agent " << i << ": ";
+    //     for(int j = 0; j < tlns_measures.accumulativeCostPerAgent[i].second.size(); j++){
+    //         stats << tlns_measures.accumulativeCostPerAgent[i].second[j] << ",";
+    //     }
+
+    //     stats << "\n";
+    // }
+
+    // for(int i = 0; i < tlns_measures.remainingCostPerAgent.size(); i++){
+    //     stats << "Remaining Cost Per Agent " << i << ": "; 
+    //     for(int j = 0; j < tlns_measures.remainingCostPerAgent[i].second.size(); j++){
+    //         stats << tlns_measures.remainingCostPerAgent[i].second[j] << ","; 
+    //     }
+
+    //     stats << "\n";
+    // }
+
+    // for(int i = 0; i < tlns_measures.commitmentCostPerExecution.size(); i++){
+    //     stats << "Commitment Cost Per Execution " << i << ": " << tlns_measures.commitmentCostPerExecution[i].first << ",";
+    //     stats << tlns_measures.commitmentCostPerExecution[i].second << "\n";
+        
+    // }
+
+
 }
     
 
-//       max(sum_of_distances, sum_of_costs_lowerbound) << "," << sum_of_distances << "," <<
-//       complete_paths << "," << delete_timesteps << "," <<
-//       iteration_stats.size() << "," << average_group_size << "," <<
-//       initial_solution_runtime << "," << restart_times << "," << auc << "," <<
-//       num_LL_expanded << "," << num_LL_generated << "," << num_LL_reopened << "," << num_LL_runs << "," <<
-//       preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
-// stats.close();
-//}
 
 
