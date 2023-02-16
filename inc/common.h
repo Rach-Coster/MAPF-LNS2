@@ -94,6 +94,7 @@ struct TLNS_options {
 
 struct AgentPositions {
     int id;
+    bool reachedGoal; 
     int currentX;
     int currentY;
     vector<pair<int, int>> pastPositions; 
