@@ -20,7 +20,7 @@ struct TLNS_measures {
     //Cost of agents after the runthrough of initLNS 
     int initCost;
 
-    //Co
+
     vector<pair<int, int>> makesumPerExecution; 
 
     //Cost of agents with path that may contain collisions 
@@ -65,6 +65,7 @@ public:
 
     pair<double, TLNS_measures> runCommitmentStrategy();
 
+    void writeImprovementsToFile(const string & file_name, TLNS_measures & tlns_measures);
     void writePathsToFile(const string & file_name, TLNS_measures & tlns_measures);
     void writeResultToFile(const string & file_name, TLNS_measures & tlns_Measures);
 

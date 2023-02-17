@@ -178,9 +178,12 @@ int main(int argc, char** argv)
 
         cout << "Total Clock time is: " << result.first << " seconds" << endl;
 
-        if (vm.count("outputPaths"))
+        if (vm.count("outputPaths")){
+            timeWrapper.writeImprovementsToFile("improvements.txt", result.second); 
             timeWrapper.writePathsToFile(vm["outputPaths"].as<string>(), result.second); 
 
+        }
+            
         if (vm.count("output"))
             timeWrapper.writeResultToFile(vm["output"].as<string>() + ".csv", result.second);
     }

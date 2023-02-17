@@ -130,10 +130,10 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
                     break;
                 }
 
-                if(iterationNo > 1){
-                    tlns_measures.states[i].pastPositions.push_back(make_pair(instance.getRowCoordinate(lns->agents[i].path[j].location),
-                                                                          instance.getColCoordinate(lns->agents[i].path[j].location)));
-                }
+                
+                tlns_measures.states[i].pastPositions.push_back(make_pair(instance.getRowCoordinate(lns->agents[i].path[j].location),
+                                                                        instance.getColCoordinate(lns->agents[i].path[j].location)));
+                
 
                 movingAgent.push_back(instance.linearizeCoordinate(tlns_measures.states[i].currentX, tlns_measures.states[i].currentY));
             }
@@ -231,7 +231,7 @@ bool TimeWrapper::atGoals(vector<AgentPositions> states)
     return true;
 };
 
-void TimeWrapper::writePathsToFile(const string &file_name, TLNS_measures &tlns_measures)
+void TimeWrapper::writeImprovementsToFile(const string &file_name, TLNS_measures &tlns_measures)
 {
     ofstream output;
     output.open(file_name);
@@ -249,7 +249,6 @@ void TimeWrapper::writePathsToFile(const string &file_name, TLNS_measures &tlns_
         output << endl;
     }
 
-
     output << "---Improved Paths---" << endl;
     for(int i = 0; i < tlns_measures.improvedPath.size(); i++){
         output << "Iteration: " << get<0> (tlns_measures.improvedPath[i]) << ", ";
@@ -264,8 +263,29 @@ void TimeWrapper::writePathsToFile(const string &file_name, TLNS_measures &tlns_
 
         output << endl;
     }
-    
+
     output.close();
+}
+
+void TimeWrapper::writePathsToFile(const string &file_name, TLNS_measures &tlns_measures){
+    ofstream output;
+    output.open(file_name);
+
+    for(int i = 0; i < tlns_measures.states.size(); i++){
+        output << "Agent " <<  i << ":";
+
+        for(int j = 0; j < tlns_measures.states[i].pastPositions.size(); j++){
+            output << "(" << tlns_measures.states[i].pastPositions[j].first << ",";
+            output << tlns_measures.states[i].pastPositions[j].second << ")->";
+        }
+
+        output << "(" << tlns_measures.states[i].currentX << ",";
+        output << tlns_measures.states[i].currentY << ")->";
+        output << endl;
+    }
+
+    output.close(); 
+
 }
 
 void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tlns_measures)
@@ -273,7 +293,7 @@ void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tl
     string name = file_name;
 
     ofstream addHeads(name, ios::out);
-    addHeads << "Iteration No, Processing Per Execution, Agent ID,Init Cost,Commitment Cost,Accumulative Cost,"
+    addHeads << "Iteration No,Processing Per Execution,Agent ID,Init Cost,Commitment Cost,Accumulative Cost,"
     << "Remaining Cost,Heuristic Commitment Cost" << endl; 
     addHeads.close();
 
@@ -298,9 +318,8 @@ void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tl
             stats << endl; 
         }
     }
-    stats.close(); 
-    
-    
+    stats.close();  
+}   
     // stats << "Runtime: " << tlns_measures.runtime << "\n"; 
 
     // //cleanup into for each loops
@@ -342,8 +361,7 @@ void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tl
     // }
 
 
-}
-    
+
 
 
 

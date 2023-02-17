@@ -1261,8 +1261,8 @@ void LNS::writePathsToFile(const string & file_name) const
     {
         output << "Agent " << agent.id << ":";
         for (const auto &state : agent.path)
-            output << "(" << instance.getColCoordinate(state.location) << "," <<
-                            instance.getRowCoordinate(state.location) << ")->";
+            output << "(" << instance.getRowCoordinate(state.location) << "," <<
+                            instance.getColCoordinate(state.location) << ")->";
         output << endl;
     }
     output.close();
