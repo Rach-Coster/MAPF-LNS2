@@ -119,46 +119,43 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
 
             int j;
             for (j = 0; j < no_of_committed_actions; j++)
-            {
-                // The output.txt file is in y,x rather than x,y which is dumb
-                if (tlns_measures.states[i].currentX == instance.getRowCoordinate(goalLocations[i]) &&
-                    tlns_measures.states[i].currentY == instance.getColCoordinate(goalLocations[i]) ||
-                    tlns_measures.states[i].reachedGoal
-                   )  
-                {
-                    tlns_measures.states[i].reachedGoal = true; 
+            {        
+                if(atGoal(tlns_measures, i)){
+                    tlns_measures.states[i].reachedGoal = true;
                     break;
                 }
-
-                
+             
                 tlns_measures.states[i].pastPositions.push_back(make_pair(instance.getRowCoordinate(lns->agents[i].path[j].location),
                                                                         instance.getColCoordinate(lns->agents[i].path[j].location)));
                 
-
                 movingAgent.push_back(instance.linearizeCoordinate(tlns_measures.states[i].currentX, tlns_measures.states[i].currentY));
+
+                if(j < lns->agents[i].path.size()){
+                    tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j+1].location);
+                    tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j+1].location);
+                }
+            
             }
 
             makesum += lns->agents[i].path.size(); 
-            
-            tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j].location);
-            tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j].location);
-            
+
+         
             //convert all pairs into doubles 
             if(iterationNo == 1){
                 tlns_measures.commitmentCostPerAgent.push_back(make_pair(i, vector<int>()));
                 tlns_measures.accumulativeCostPerAgent.push_back(make_pair(i, vector<int>()));
                 tlns_measures.remainingCostPerAgent.push_back(make_pair(i, vector<int>()));
                 
-                tlns_measures.accumulativeCostPerAgent[i].second.push_back(j * time_per_action);
+                tlns_measures.accumulativeCostPerAgent[i].second.push_back((j+1) * time_per_action);
             }    
 
             else {
 
-                tlns_measures.accumulativeCostPerAgent[i].second.push_back(tlns_measures.accumulativeCostPerAgent[i].second.back() + (j * time_per_action));
+                tlns_measures.accumulativeCostPerAgent[i].second.push_back(tlns_measures.accumulativeCostPerAgent[i].second.back() + ((j+1) * time_per_action));
             }
 
-            tlns_measures.commitmentCostPerAgent[i].second.push_back(j * time_per_action);
-            tlns_measures.remainingCostPerAgent[i].second.push_back(lns->agents[i].path.size() - (j + 1) * time_per_action);
+            tlns_measures.commitmentCostPerAgent[i].second.push_back((j+1) * time_per_action);
+            tlns_measures.remainingCostPerAgent[i].second.push_back(lns->agents[i].path.size() - (j+1) * time_per_action);
 
             costPerExecution += tlns_measures.commitmentCostPerAgent[i].second.back();
 
@@ -199,6 +196,11 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         if(pathSum < makesum){
             tlns_measures.makesumPerExecution.push_back(make_pair(iterationNo, makesum)); 
         }
+
+        else {
+           writePathsToFile("paths.txt", tlns_measures); 
+           assert(pathSum <= makesum); 
+        }
        
         double processingTime = ((fsec)(Time::now() - agent_processing_time)).count();
 
@@ -220,16 +222,23 @@ bool TimeWrapper::atGoals(vector<AgentPositions> states)
 
     vector<int> goalLocations = instance.getGoals();
 
-    for (int i = 0; i < states.size(); i++)
-    {
-        if (states[i].currentX != instance.getRowCoordinate(goalLocations[i]) ||
-            states[i].currentY != instance.getColCoordinate(goalLocations[i]))
-        {
-            return false;
-        }
+    for (int i = 0; i < states.size(); i++){
+        if(this->instance.linearizeCoordinate(states[i].currentX, states[i].currentY) != goalLocations[i])
+        return false; 
     }
+    
     return true;
 };
+
+bool TimeWrapper::atGoal(TLNS_measures tlns_measures, int agentId){
+    int goalLocation = this->instance.getGoals()[agentId]; 
+
+    if(this->instance.linearizeCoordinate(tlns_measures.states[agentId].currentX,
+        tlns_measures.states[agentId].currentY) != goalLocation)
+        return false; 
+    
+    return true; 
+}
 
 void TimeWrapper::writeImprovementsToFile(const string &file_name, TLNS_measures &tlns_measures)
 {
@@ -359,9 +368,4 @@ void TimeWrapper::writeResultToFile(const string & file_name, TLNS_measures & tl
     //     stats << tlns_measures.commitmentCostPerExecution[i].second << "\n";
         
     // }
-
-
-
-
-
 

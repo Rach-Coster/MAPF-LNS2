@@ -74,6 +74,7 @@ private:
     solution_type s_type = FEASIBLE; 
 
     bool atGoals(vector<AgentPositions> states);
+    bool atGoal(TLNS_measures tlns_measures, int agentId);
 
     high_resolution_clock::time_point start_time;
    
