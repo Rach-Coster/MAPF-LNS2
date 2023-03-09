@@ -56,7 +56,7 @@ public:
     TLNS_options tlnsOptions;
     Instance& instance; 
     //Just in case the time_per_action can be changed after a meta-heuristic runs
-    double time_per_action = 1;; 
+    double time_per_action = 1; 
     int no_of_committed_actions = 1; 
 
     TimeWrapper(Instance&  instance, const double& timePerAction, const int& noOfCommittedActions,

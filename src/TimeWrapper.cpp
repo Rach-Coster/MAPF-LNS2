@@ -54,6 +54,8 @@ TimeWrapper::TimeWrapper(Instance &instance, const double &timePerAction, const 
 
 pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
 {
+    assert(tlnsOptions.initLNS); 
+
     pair<double, TLNS_measures> completedPlan; 
 
     TLNS_measures tlns_measures;
@@ -116,6 +118,7 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         for (int i = 0; i < lns->agents.size(); i++)
         {   
             vector<int> movingAgent;
+            movingAgent.clear();
 
             int j;
             for (j = 0; j < no_of_committed_actions; j++)
@@ -127,40 +130,62 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
              
                 tlns_measures.states[i].pastPositions.push_back(make_pair(instance.getRowCoordinate(lns->agents[i].path[j].location),
                                                                         instance.getColCoordinate(lns->agents[i].path[j].location)));
-                
-                movingAgent.push_back(instance.linearizeCoordinate(tlns_measures.states[i].currentX, tlns_measures.states[i].currentY));
-
-                if(j < lns->agents[i].path.size()){
-                    tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j+1].location);
-                    tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j+1].location);
-                }
+            }
             
+         
+
+            if(j < lns->agents[i].path.size() - 1){
+                tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j+1].location);
+                tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j+1].location);
+
+                if(instance.linearizeCoordinate(tlns_measures.states[i].currentX, tlns_measures.states[i].currentY) == 
+                    lns->agents[i].path_planner->goal_location){
+                    movingAgent.push_back(lns->agents[i].path_planner->goal_location);
+    
+                }
+                else {
+                    for(int k = j+1; k < lns->agents[i].path.size(); k++){
+                        movingAgent.push_back(lns->agents[i].path[k].location);
+                    }
+                }   
+            }
+            else if(!tlns_measures.states[i].reachedGoal){
+                tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path_planner->goal_location);
+                tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path_planner->goal_location);
+                movingAgent.push_back(lns->agents[i].path_planner->goal_location);
             }
 
-            makesum += lns->agents[i].path.size(); 
+            else if(tlns_measures.states[i].reachedGoal && movingAgent.empty()){
+                movingAgent.push_back(lns->agents[i].path_planner->goal_location);
+            }
 
-         
+            
+
             //convert all pairs into doubles 
             if(iterationNo == 1){
                 tlns_measures.commitmentCostPerAgent.push_back(make_pair(i, vector<int>()));
                 tlns_measures.accumulativeCostPerAgent.push_back(make_pair(i, vector<int>()));
                 tlns_measures.remainingCostPerAgent.push_back(make_pair(i, vector<int>()));
                 
-                tlns_measures.accumulativeCostPerAgent[i].second.push_back((j+1) * time_per_action);
+                tlns_measures.accumulativeCostPerAgent[i].second.push_back((j) * time_per_action);
             }    
 
             else {
 
-                tlns_measures.accumulativeCostPerAgent[i].second.push_back(tlns_measures.accumulativeCostPerAgent[i].second.back() + ((j+1) * time_per_action));
+                tlns_measures.accumulativeCostPerAgent[i].second.push_back(tlns_measures.accumulativeCostPerAgent[i].second.back() + ((j) * time_per_action));
             }
 
-            tlns_measures.commitmentCostPerAgent[i].second.push_back((j+1) * time_per_action);
-            tlns_measures.remainingCostPerAgent[i].second.push_back(lns->agents[i].path.size() - (j+1) * time_per_action);
+            tlns_measures.commitmentCostPerAgent[i].second.push_back((j) * time_per_action);
+            tlns_measures.remainingCostPerAgent[i].second.push_back(lns->agents[i].path.size() - (j) * time_per_action);
 
             costPerExecution += tlns_measures.commitmentCostPerAgent[i].second.back();
-
             instance.setStartLocation(tlns_measures.states[i]);
+    
             solutionPositions.push_back(make_pair(lns->agents[i].id, movingAgent));
+        }
+
+        for(int l = 0; l < solutionPositions.size(); l++){
+            makesum += solutionPositions[l].second.size(); 
         }
 
         tlns_measures.commitmentCostPerExecution.push_back(make_pair(iterationNo, costPerExecution));
@@ -173,8 +198,14 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         lns = new LNS(instance, tlnsOptions);
 
         high_resolution_clock::time_point agent_processing_time = Time::now(); 
+        
+        lns->sum_of_costs = makesum; 
 
         lns->loadTlnsPath(solutionPositions);
+        solutionPositions.clear();         
+
+        lns->validateSolution();
+        //check if it is valid 
 
         //Sanity check 
         for(int i = 0; i < lns->agents.size(); i++){

@@ -1198,7 +1198,6 @@ void LNS::loadTlnsPath(const vector<std::pair<int, vector<int>>>& solutionVec){
             PathEntry pathEntry;
             pathEntry.location = solutionVec[i].second[j];
             agents[i].path.push_back(pathEntry); 
-
         }
 
     }
