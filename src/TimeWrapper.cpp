@@ -135,8 +135,8 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
          
 
             if(j < lns->agents[i].path.size() - 1){
-                tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j+1].location);
-                tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j+1].location);
+                tlns_measures.states[i].currentX = instance.getRowCoordinate(lns->agents[i].path[j].location);
+                tlns_measures.states[i].currentY = instance.getColCoordinate(lns->agents[i].path[j].location);
 
                 if(instance.linearizeCoordinate(tlns_measures.states[i].currentX, tlns_measures.states[i].currentY) == 
                     lns->agents[i].path_planner->goal_location){
@@ -144,7 +144,7 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
     
                 }
                 else {
-                    for(int k = j+1; k < lns->agents[i].path.size(); k++){
+                    for(int k = j; k < lns->agents[i].path.size(); k++){
                         movingAgent.push_back(lns->agents[i].path[k].location);
                     }
                 }   
@@ -204,7 +204,7 @@ pair<double, TLNS_measures> TimeWrapper::runCommitmentStrategy()
         lns->loadTlnsPath(solutionPositions);
         solutionPositions.clear();         
 
-        lns->validateSolution();
+        assert(lns->validateSolution());
         //check if it is valid 
 
         //Sanity check 
